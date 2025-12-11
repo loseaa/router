@@ -1,6 +1,7 @@
 import type { RouterOptions } from "vue-router";
 import { createRouterMatcher } from "./routeMacher";
 import { computed, reactive, shallowRef } from "vue";
+import routerLink from "./RouterLink";
 
 export function createRouter(options: RouterOptions) {
   const routerHistory = options.history;
@@ -60,7 +61,7 @@ export function createRouter(options: RouterOptions) {
     let guards: any = [];
     records.forEach((record: any) => {
       let comp = record.components;
-      if (comp[guardName]) {
+      if (comp&&comp[guardName]) {
         guards.push(guardToPromise(comp[guardName], to, from, record));
       }
     });
@@ -82,7 +83,7 @@ export function createRouter(options: RouterOptions) {
 
     // 某个路由独享的守卫
     for (let record of leavingRecords) {
-      record.leaveGuards.forEach((gs: any) => {
+      record.leaveGuards?.forEach((gs: any) => {
         guards.push(guardToPromise(gs, to, from, record));
       });
     }
@@ -113,7 +114,7 @@ export function createRouter(options: RouterOptions) {
           from
         );
         for (let record of updatingRecords) {
-          record.leaveGuards.forEach((gs: any) => {
+          record.leaveGuards?.forEach((gs: any) => {
             guards.push(guardToPromise(gs, to, from, record));
           });
         }
@@ -135,7 +136,7 @@ export function createRouter(options: RouterOptions) {
           from
         );
         for (let record of enteringRecords) {
-          record.enterGuards.forEach((gs: any) => {
+          record.enterGuards?.forEach((gs: any) => {
             guards.push(guardToPromise(gs, to, from, record));
           });
         }
@@ -155,6 +156,7 @@ export function createRouter(options: RouterOptions) {
   }
 
   function finalizeNavigation(to: any, from: any, replace?: any) {
+    debugger
     if (from === START_LOCATION_NORMALIZED || replace) {
       routerHistory.replace(to);
     } else {
@@ -173,7 +175,7 @@ export function createRouter(options: RouterOptions) {
   }
 
   function runGuards(guards: any) {
-    guards.reduce(
+    return guards.reduce(
       (promise: any, guard: any) => promise.then(() => guard),
       Promise.resolve()
     );
@@ -197,6 +199,7 @@ export function createRouter(options: RouterOptions) {
     beforeEach: beforeGuards.add,
     afterEach: afterGuards.add,
     resolve: resolveGuards.add,
+    push,
     install(app: any) {
       let router = this;
       app.config.globalProperties.$router = router;
@@ -210,6 +213,7 @@ export function createRouter(options: RouterOptions) {
       for (let key in START_LOCATION_NORMALIZED) {
         reactiveRoute[key] = computed(() => (currentRoute.value as any)[key]);
       }
+      app.component('RouterLink',routerLink)
 
       app.provide("router", router);
       app.provide("route location", reactive(reactiveRoute));

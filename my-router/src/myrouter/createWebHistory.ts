@@ -4,14 +4,14 @@ export function createWebHistory(base: string = "/"): any {
   const historyListeners = useHistoryListeners(
     base,
     historyNavigation.state,
-    historyNavigation.location,
+    historyNavigation.location
   );
-  
+
   const routerHistory = Object.assign(
     {
       location: "",
       base,
-    //   go,
+      //   go,
     },
     historyNavigation,
     historyListeners
@@ -66,11 +66,16 @@ function useHistoryStateNavigation(base: string) {
     );
   }
 
-  function changeLocation(to: string, state: any, replace: boolean) {
+  function changeLocation(to: string | any, state: any, replace: boolean) {
     const hashIndex = base.indexOf("#");
+    if (typeof to !== "string") {
+      to = to.path;
+    }
     const url = hashIndex > -1 ? to.slice(0, hashIndex) : to;
     history[replace ? "replaceState" : "pushState"](state, "", url);
     historyState.value = state;
+    currentLocation.value = to;
+
   }
   function buildState(back: any, to: any, forward: any, replace: any) {
     return {
@@ -81,15 +86,16 @@ function useHistoryStateNavigation(base: string) {
     };
   }
   function push(to: any, data?: any) {
+
     const currentState = Object.assign({}, historyState.value, history.state, {
-      forward: to,
+      forward: to.path,
     });
     // 第一次changeLocation，使用replace刷新当前历史，目的是记录当前页面的滚动位置
-    changeLocation(currentState.current, currentState, true);
+    changeLocation(currentState.forward, currentState, true);
 
     const state: any = Object.assign(
       {},
-      buildState(currentLocation.value, to, null, false),
+      buildState((currentLocation.value as any).path, to.path, null, false),
       { position: currentState.position + 1 },
       data
     );
@@ -103,7 +109,12 @@ function useHistoryStateNavigation(base: string) {
     const state = Object.assign(
       {},
       history.state,
-      buildState(historyState.value.back, to, historyState.value.forward, true),
+      buildState(
+        historyState.value.back,
+        to.path,
+        historyState.value.forward,
+        true
+      ),
       data,
       // 因为是replace操作，所以position不变
       { position: historyState.value.position }
@@ -120,28 +131,31 @@ function useHistoryStateNavigation(base: string) {
   };
 }
 
-
-function useHistoryListeners(  base: string,
-  historyState:any,
-  currentLocation:any){
-    let navigationCallbacks:any=[]
-    function listen(fn:any){
-        navigationCallbacks.push(fn)
-    }
-    let from=currentLocation.value
-    let to=createCurrentLocation(base, location)
-    let fromstate=historyState.value
-
-    
-    function popStateHandler({state}:any){
-        let isBack=state.position<fromstate.position
-        navigationCallbacks.forEach((fn:any)=>fn(from,to,{isBack}))
-    }
-    window.addEventListener("popstate", popStateHandler)
-
-    return {listen}
+function useHistoryListeners(
+  base: string,
+  historyState: any,
+  currentLocation: any
+) {
+  let navigationCallbacks: any = [];
+  function listen(fn: any) {
+    navigationCallbacks.push(fn);
   }
 
+  function popStateHandler({ state }: any) {
+    let from = currentLocation.value;
+    let to = createCurrentLocation(base, location);
+    if(to===from.path){
+        return
+    }
+    let fromstate = historyState.value;
+    let isBack = state.position < fromstate.position;
+    debugger
+    navigationCallbacks.forEach((fn: any) => fn(to, from, { isBack }));
+  }
+  window.addEventListener("popstate", popStateHandler);
+
+  return { listen };
+}
 
 /**
  * 创建当前位置

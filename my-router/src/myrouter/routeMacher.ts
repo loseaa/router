@@ -5,7 +5,6 @@ export function createRouterMatcher(routes: any) {
             route.path=parent.path+route.path
         }
         machers.push(createRouteRecordMacher(route,parent))
-        debugger
   }
 
   function createRouteRecordMacher(route:any,parent?:any){
