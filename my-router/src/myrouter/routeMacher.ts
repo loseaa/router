@@ -2,7 +2,7 @@ export function createRouterMatcher(routes: any) {
   const machers: any = [];
   function addRoute(route: any, parent?: any) {
         if(parent){
-            route.path=parent.path+route.path
+            route.path=parent.path+"/"+route.path
         }
         machers.push(createRouteRecordMacher(route,parent))
   }

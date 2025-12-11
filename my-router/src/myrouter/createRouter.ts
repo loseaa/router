@@ -2,6 +2,7 @@ import type { RouterOptions } from "vue-router";
 import { createRouterMatcher } from "./routeMacher";
 import { computed, reactive, shallowRef } from "vue";
 import routerLink from "./RouterLink";
+import routerView from "./routerView";
 
 export function createRouter(options: RouterOptions) {
   const routerHistory = options.history;
@@ -156,7 +157,6 @@ export function createRouter(options: RouterOptions) {
   }
 
   function finalizeNavigation(to: any, from: any, replace?: any) {
-    debugger
     if (from === START_LOCATION_NORMALIZED || replace) {
       routerHistory.replace(to);
     } else {
@@ -214,7 +214,8 @@ export function createRouter(options: RouterOptions) {
         reactiveRoute[key] = computed(() => (currentRoute.value as any)[key]);
       }
       app.component('RouterLink',routerLink)
-
+      app.component('RouterView',routerView)
+      
       app.provide("router", router);
       app.provide("route location", reactive(reactiveRoute));
 

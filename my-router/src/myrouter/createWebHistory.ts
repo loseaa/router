@@ -71,7 +71,8 @@ function useHistoryStateNavigation(base: string) {
     if (typeof to !== "string") {
       to = to.path;
     }
-    const url = hashIndex > -1 ? to.slice(0, hashIndex) : to;
+    let url = hashIndex > -1 ? to.slice(0, hashIndex) : to;
+    url=base+url
     history[replace ? "replaceState" : "pushState"](state, "", url);
     historyState.value = state;
     currentLocation.value = to;
@@ -149,7 +150,6 @@ function useHistoryListeners(
     }
     let fromstate = historyState.value;
     let isBack = state.position < fromstate.position;
-    debugger
     navigationCallbacks.forEach((fn: any) => fn(to, from, { isBack }));
   }
   window.addEventListener("popstate", popStateHandler);
